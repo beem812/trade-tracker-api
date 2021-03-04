@@ -1,30 +1,27 @@
 package beem812.tradetracker.algebras
 
-import beem812.tradetracker.domain.trade.Trade
-// import doobie.hikari.HikariTransactor
 import doobie.quill.DoobieContext
-// import doobie.implicits._
 import cats.effect.Sync
-// import apertures.domain.sharedLink.CreateSharedLink
-// import cats.implicits._
 import doobie._
 import beem812.tradetracker.domain.trade.WheelTrade
 
 
-trait Trades {
+trait TradesRepo {
   def getTrades(): ConnectionIO[List[WheelTrade]]
+
+  def tradesByTicker(ticker: String): ConnectionIO[List[WheelTrade]]
   
   def insertTrade(trade: WheelTrade): ConnectionIO[Option[String]]
 }
 
-object LiveTrades {
-  def make[F[_]: Sync](): F[LiveTrades] = 
+object LiveTradesRepo {
+  def make[F[_]: Sync](): F[LiveTradesRepo] = 
     Sync[F].delay{
-      new LiveTrades()
+      new LiveTradesRepo()
     }
 }
 
-final class LiveTrades  extends Trades {
+final class LiveTradesRepo  extends TradesRepo {
   val ctx = new DoobieContext.MySQL[io.getquill.SnakeCase](io.getquill.SnakeCase)
 
   import ctx._
@@ -34,8 +31,8 @@ final class LiveTrades  extends Trades {
     run(q)
   }
 
-  def getTicker(ticker: String): ConnectionIO[List[Trade]] = {
-    val q = quote{ query[Trade].filter{(trade) => trade.ticker == lift(ticker)}}
+  def tradesByTicker(ticker: String): ConnectionIO[List[WheelTrade]] = {
+    val q = quote{ query[WheelTrade].filter{(trade) => trade.ticker == lift(ticker)}}
     run(q)
   }
 

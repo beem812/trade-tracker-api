@@ -2,6 +2,9 @@ package beem812.tradetracker.algebras
 
 import beem812.tradetracker.domain.Research.Price
 import cats.effect.Sync
+import beem812.tradetracker.domain.trade._
+import beem812.tradetracker.domain.CreditDebit
+import beem812.tradetracker.domain.Action
 
 trait Analysis[F[_]] {
   def getSMA20(prices: List[Price]): F[Double]
@@ -84,6 +87,22 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
     }
 
     (gains, losses)
+  }
+
+  def getCostBasis(trades: List[WheelTrade]) = Sync[F].delay {
+    val totalCredit: Double = trades.map{
+      case WheelTrade(_, _, _, _, price, shares, CreditDebit.Credit) => price.toDouble * shares * 1.0D
+      case WheelTrade(_, _, _, _, price, shares, CreditDebit.Debit) => price.toDouble * shares * -1.0D
+      case _ => 0.0D
+    }.foldLeft(0.0D)(_ + _)
+
+    val totalShares = trades.filter((trade: WheelTrade) => trade.action == Action.SharesAssigned || trade.action == Action.SharesCalled).foldLeft(0.0){
+      case(acc, WheelTrade(_, _, Action.SharesAssigned, _, _, shares, _)) => acc + shares
+      case (acc, WheelTrade(_, _, Action.SharesCalled, _, _, shares, _)) => acc - shares
+      case (acc, _) => acc 
+    }
+
+    (totalCredit, totalShares, Math.abs(totalCredit / totalShares))
   }
 
 
