@@ -16,7 +16,7 @@ class TradeTrackerSpec extends ServiceSuite {
   })
 
   trackerProgram.test("insert"){ s =>
-    val newTrade = trade.WheelTrade(None, "CRSR", Action.CC, "", 3.90, 100, CreditDebit.Credit)
+    val newTrade = trade.WheelTrade(None, "PLTR", Action.CC, "", 3.90, 100, CreditDebit.Credit)
     val result = for { 
       t <- s
       id <- t.insertTrade(newTrade)
