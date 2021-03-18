@@ -43,12 +43,14 @@ object TradetrackerRoutes {
     HttpRoutes.of[F] {
       case GET -> Root / "trades" =>
         T.getTrades().flatMap(Ok(_)) 
+      
+      case GET -> Root / ticker / "costbasis" =>
+        T.getCostBasis(ticker).flatMap(Ok(_))
 
       case req @ POST -> Root / "trade" => {
         req.as[WheelTrade]
           .flatMap(T.insertTrade(_))
           .flatMap(Ok(_))
-          
       }
     }
   }

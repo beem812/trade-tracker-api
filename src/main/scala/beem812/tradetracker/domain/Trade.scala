@@ -59,4 +59,6 @@ object trade {
 
   case class WheelTrade(id: Option[String], ticker: String, action: Action, date: String, pricePerShare: BigDecimal, shares: Int, creditDebit: CreditDebit)
 
+  case class CostBasisData(credit: Double, shares: Double, costBasis: Double)
+
 }

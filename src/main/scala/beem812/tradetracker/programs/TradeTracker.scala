@@ -7,11 +7,14 @@ import beem812.tradetracker.domain.trade.WheelTrade
 import doobie.util.transactor.Transactor
 import beem812.tradetracker.algebras.LiveAnalysis
 import cats.implicits._
+import beem812.tradetracker.domain.trade._
 
 trait TradeTracker[F[_]] {
   def getTrades(): F[List[WheelTrade]]
 
   def insertTrade(trade: WheelTrade): F[Option[String]]
+
+  def getCostBasis(ticker: String): F[CostBasisData]
 }
 
 object LiveTradeTracker {
@@ -40,7 +43,7 @@ final class LiveTradeTracker[F[_]: Sync] (
     trades.insertTrade(trade).transact(transactor)
   }
 
-  def getCostBasis(ticker: String) = {
+  def getCostBasis(ticker: String): F[CostBasisData] = {
     for {
       t <- trades.tradesByTicker(ticker).transact(transactor)
       basis <- analysis.getCostBasis(t)

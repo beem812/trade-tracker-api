@@ -102,7 +102,7 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
       case (acc, _) => acc 
     }
 
-    (totalCredit, totalShares, Math.abs(totalCredit / totalShares))
+    CostBasisData(totalCredit, totalShares, Math.abs(totalCredit / totalShares))
   }
 
 
