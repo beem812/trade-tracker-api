@@ -17,7 +17,7 @@ trait Analysis[F[_]] {
 }
 
 object LiveAnalysis {
-  def make[F[_]: Sync]() = Sync[F].delay(new LiveAnalysis[F])
+  def make[F[_]: Sync]() = new LiveAnalysis[F]
 }
 
 

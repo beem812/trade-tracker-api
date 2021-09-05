@@ -12,7 +12,7 @@ trait StockScreener[F[_]] {
 }
 
 object LiveStockScreener {
-  def make[F[_]: Parallel: Sync](researchClient: Research[F], analysis: Analysis[F]) = Sync[F].delay(new LiveStockScreener[F](researchClient, analysis))
+  def make[F[_]: Parallel: Sync](researchClient: Research[F], analysis: Analysis[F]) = new LiveStockScreener[F](researchClient, analysis)
 }
 
 final class LiveStockScreener[F[_]: Parallel: Sync] private (val researchClient: Research[F], val analysis: Analysis[F]) extends StockScreener[F] {

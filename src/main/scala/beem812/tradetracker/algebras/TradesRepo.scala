@@ -15,10 +15,8 @@ trait TradesRepo {
 }
 
 object LiveTradesRepo {
-  def make[F[_]: Sync](): F[LiveTradesRepo] = 
-    Sync[F].delay{
-      new LiveTradesRepo()
-    }
+  def make[F[_]: Sync](): LiveTradesRepo = 
+    new LiveTradesRepo()
 }
 
 final class LiveTradesRepo  extends TradesRepo {

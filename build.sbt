@@ -16,6 +16,7 @@ lazy val root = (project in file("."))
       "org.http4s"      %% "http4s-blaze-client"      % Http4sVersion,
       "org.http4s"      %% "http4s-circe"             % Http4sVersion,
       "org.http4s"      %% "http4s-dsl"               % Http4sVersion,
+      "org.http4s" %% "http4s-jdk-http-client" % "0.3.5",
       "io.circe"        %% "circe-generic"            % CirceVersion,
       "org.scalameta"   %% "munit"                    % MunitVersion           % Test,
       "org.typelevel"   %% "munit-cats-effect-2"      % MunitCatsEffectVersion % Test,
@@ -35,6 +36,9 @@ lazy val root = (project in file("."))
       "org.flywaydb"          %  "flyway-core"        % "7.5.2",
       "io.scalaland" %% "chimney" % "0.6.1",
       "io.scalaland" %% "chimney-cats" % "0.6.1",
+      "io.circe" %% "circe-parser" % CirceVersion,
+      "com.github.jwt-scala" %% "jwt-circe" % "7.1.3",
+      "com.auth0" % "jwks-rsa" % "0.17.1"
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),

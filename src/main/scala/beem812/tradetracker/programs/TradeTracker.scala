@@ -18,12 +18,8 @@ trait TradeTracker[F[_]] {
 }
 
 object LiveTradeTracker {
-  def make[F[_]: Sync](trades: TradesRepo, 
-   analysis: LiveAnalysis[F], 
-  transactor: Transactor[F])= {
-    Sync[F].delay{
-      new LiveTradeTracker(trades, analysis, transactor)
-    }
+  def make[F[_]: Sync](trades: TradesRepo, analysis: LiveAnalysis[F], transactor: Transactor[F]) = {
+    new LiveTradeTracker(trades, analysis, transactor)
   }
 }
 

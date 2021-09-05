@@ -8,8 +8,9 @@ import pureconfig.module.catseffect.syntax._
 import cats.effect.Sync
 
 object Config {
+  case class Auth0Config(domain: String)
   case class DatabaseConfig(driver: String, url: String, user: String, password: String, threadPoolSize: Int)
-  case class Config(dbConfig: DatabaseConfig)
+  case class Config(dbConfig: DatabaseConfig, auth0Config: Auth0Config)
   def load[F[_]: Sync](configFile: String = "application.conf")(implicit cs: ContextShift[F]): Resource[F, Config] = 
 
     Blocker[F].flatMap{ blocker => Resource.liftF(ConfigSource.fromConfig(ConfigFactory.load(configFile)).loadF[F, Config](blocker))}

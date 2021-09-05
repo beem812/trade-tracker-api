@@ -25,6 +25,8 @@ object Research {
     }
   }  
 
+  case class StockQuote(o: Double, h: Double, l: Double, c: Double, pc: Double)
+  case class StockQuoteWithTicker(ticker: String, o: Double, h: Double, l: Double, c: Double, pc: Double)
   case class Price(date: Int, open: Double, high: Double, low: Double,  close: Double,   volume: Int, adjclose: Double)
   case class PriceHistory(symbol: String, prices: List[Price], firstTradeDate: Int, id: String, isPending: Boolean)
   case class IntermediatePriceHistory(prices: List[Json], firstTradeDate: Int, id: String, isPending: Boolean)

@@ -10,6 +10,7 @@ import cats.effect.Resource
 import cats.effect.Sync
 import doobie.hikari.HikariTransactor
 import org.flywaydb.core.Flyway
+import beem812.tradetracker.algebras.LiveResearch
 
 object Database {
   def transactor[F[_]: Async](config: DatabaseConfig, executionContext: ExecutionContext)(implicit contextShift: ContextShift[F]): Resource[F, HikariTransactor[F]] = {
@@ -22,7 +23,9 @@ object Database {
   def initialize[F[_]: Sync](transactor: HikariTransactor[F]): F[Unit] = {
     transactor.configure{ dataSource => 
       Sync[F].delay{
-        val flyway = Flyway.configure().dataSource(dataSource).load()
+        val loader = classOf[LiveResearch[F]].getClassLoader()
+        val flyway = Flyway.configure(loader).dataSource(dataSource).load()
+        
         flyway.migrate()
         ()
       }

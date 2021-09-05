@@ -13,9 +13,9 @@ class TradeTrackerSpec extends ServiceSuite {
   val trackerProgram = ResourceFixture(transactor.map{xa => 
       for {
         trans <- xa
-        analysisAlg <- LiveAnalysis.make[IO]()
-        alg <- LiveTradesRepo.make[IO]()
-        service <- LiveTradeTracker.make[IO](alg, analysisAlg, trans)
+        analysisAlg = LiveAnalysis.make[IO]()
+        alg = LiveTradesRepo.make[IO]()
+        service = LiveTradeTracker.make[IO](alg, analysisAlg, trans)
       } yield service
   })
 
@@ -44,10 +44,9 @@ class TradeTrackerSpec extends ServiceSuite {
     val result = for {
       tracker <- service
       _ <- trades.map(tracker.insertTrade(_)).parSequence
-      tracker <- service
       costBasis <- tracker.getCostBasis("PLTR")
     } yield costBasis
-    assertIO(result, (1D, 2D,3D)) 
+    assertIO(result, CostBasisData(-4927.0, 200.0,24.635)) 
   
   }
 }
