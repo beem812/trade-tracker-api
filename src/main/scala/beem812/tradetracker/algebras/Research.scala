@@ -17,7 +17,10 @@ import cats.effect.Timer
 import cats.effect.ConcurrentEffect
 import cats.effect.concurrent.Ref
 
-
+/**
+ * The Research trait provides methods for retrieving historical stock data,
+ * subscribing to ticker updates, and getting stock quotes.
+ */
 trait Research[F[_]] {
   def getHistoricalData(ticker: String): F[PriceHistory]
   def subscribeToTicker(ticker: String): F[Unit] 
@@ -31,10 +34,21 @@ object LiveResearch {
     new LiveResearch[F](client, ws)
 }
 
+/**
+ * The LiveResearch class implements the Research trait and provides concrete
+ * implementations for retrieving historical stock data, subscribing to ticker
+ * updates, and getting stock quotes.
+ */
 final class LiveResearch[F[_]: Sync: Timer] private (client: Client[F], ws: WSConnectionHighLevel[F]) extends Research[F] {
   import LiveResearch._
   def searchTickerGoogle(ticker: String): F[String] = ???
 
+  /**
+   * Retrieves historical stock data for a given symbol.
+   *
+   * @param symbol The stock symbol.
+   * @return The historical price data.
+   */
   def getHistoricalData(symbol: String): F[PriceHistory] = {
     val rapiApiUri = uri"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v3/get-historical-data"+?("symbol", symbol)
 
@@ -45,11 +59,23 @@ final class LiveResearch[F[_]: Sync: Timer] private (client: Client[F], ws: WSCo
 
   def searchTickerBarChartCom(ticker: String): F[String] = ???
 
+  /**
+   * Subscribes to ticker updates for a given symbol.
+   *
+   * @param ticker The stock ticker symbol.
+   * @return Unit
+   */
   def subscribeToTicker(ticker: String): F[Unit] = for{
     _ <- Sync[F].delay(println("subscribing"))
     _ <- ws.send(WSFrame.Text(TickerSubscriptionMessage("subscribe", ticker).asJson.toString()))
   } yield ()
 
+  /**
+   * Retrieves the current stock quote for a given ticker.
+   *
+   * @param ticker The stock ticker symbol.
+   * @return The stock quote with ticker information.
+   */
   def getStockQuote(ticker: String): F[StockQuoteWithTicker] = {
     val finnhubUri =uri"https://finnhub.io/api/v1/quote?&token=c1ah4pf48v6v5v4gu980"+?("symbol", ticker)
     val req = Request[F](Method.GET, finnhubUri, HttpVersion.`HTTP/1.1`)
