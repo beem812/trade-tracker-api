@@ -6,6 +6,10 @@ import beem812.tradetracker.domain.trade._
 import beem812.tradetracker.domain.CreditDebit
 import beem812.tradetracker.domain.Action
 
+/**
+ * The Analysis trait provides methods for calculating various technical indicators
+ * used in stock analysis.
+ */
 trait Analysis[F[_]] {
   def getSMA20(prices: List[Price]): F[Double]
 
@@ -20,17 +24,38 @@ object LiveAnalysis {
   def make[F[_]: Sync]() = new LiveAnalysis[F]
 }
 
-
+/**
+ * The LiveAnalysis class implements the Analysis trait and provides concrete
+ * implementations for calculating technical indicators.
+ */
 final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
 
+  /**
+   * Calculates the 20-day Simple Moving Average (SMA) for a list of prices.
+   *
+   * @param prices A list of Price objects.
+   * @return The 20-day SMA.
+   */
   def getSMA20(prices: List[Price]): F[Double] = Sync[F].delay{
     prices.take(20).foldLeft(0.0)(_ + _.close) / 20
   }
 
+  /**
+   * Calculates the 50-day Simple Moving Average (SMA) for a list of prices.
+   *
+   * @param prices A list of Price objects.
+   * @return The 50-day SMA.
+   */
   def getSMA50(prices: List[Price]): F[Double] = Sync[F].delay{
     prices.take(50).foldLeft(0.0)(_ + _.close) / 50
   }
 
+  /**
+   * Calculates the Relative Strength Index (RSI) for a list of prices.
+   *
+   * @param prices A list of Price objects.
+   * @return The RSI value.
+   */
   def getRSI(prices: List[Price]): F[Double] = Sync[F].delay{
     val runUp = prices.drop(14).take(14)
     val (prevGains, prevLosses) = gainsAndLosses(runUp)
@@ -61,6 +86,12 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
     100 - (100 / (1 + relativeStrength))
   }
 
+  /**
+   * Calculates the Wilder's Relative Strength Index (RSI) for a list of prices.
+   *
+   * @param prices A list of Price objects.
+   * @return The Wilder's RSI value.
+   */
   def getWildersRSI(prices: List[Price]): F[Double] = Sync[F].delay{
     val previousSum = prices.drop(14).take(14).foldLeft(0.0)(_ + _.close)
     val previousAverage = previousSum / 14
@@ -79,7 +110,7 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
 
   def gainsAndLosses(prices: List[Price]): (Double, Double) = {
     val (gains, losses) = prices.map(_.close).sliding(2,1).toList.foldLeft((0.0, 0.0)){
-      case ((gains, losses), List(first, second)) => if(first > second){ (gains + first - second, losses)} else {(gains, losses + second - first)}
+      case ((gains, losses), List(first, second)) => if(first > second){ (gains + first - second, losses)} else {(gains, losses + second -  first)}
 
       case ((gains, losses), _) => (gains, losses)
 

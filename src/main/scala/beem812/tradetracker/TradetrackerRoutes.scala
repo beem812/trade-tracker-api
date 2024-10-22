@@ -49,25 +49,60 @@ object TradetrackerRoutes {
     }
   }
 
+  /**
+   * Defines the HTTP routes for trade-related operations.
+   *
+   * @param T The TradeTracker instance for handling trade operations.
+   * @param R The LiveResearch instance for handling research operations.
+   * @param WS The WebSocket connection for handling real-time updates.
+   * @return The HttpRoutes for trade-related operations.
+   */
   def tradeRoutes[F[_]: Sync: Concurrent](T: TradeTracker[F], R: LiveResearch[F], WS: WSConnectionHighLevel[F]): HttpRoutes[F] = {
     val dsl = new Http4sDsl[F]{}
     import dsl._
     HttpRoutes.of[F] {
+      /**
+       * Retrieves all trades.
+       *
+       * @return The list of trades.
+       */
       case GET -> Root / "trades" =>
         T.getTrades().flatMap(Ok(_)) 
       
+      /**
+       * Retrieves the cost basis for a given ticker.
+       *
+       * @param ticker The stock ticker symbol.
+       * @return The cost basis data.
+       */
       case GET -> Root / ticker / "costbasis" =>
         T.getCostBasis(ticker).flatMap(Ok(_))
 
+      /**
+       * Inserts a new trade.
+       *
+       * @param req The HTTP request containing the trade data.
+       * @return The ID of the inserted trade.
+       */
       case req @ POST -> Root / "trade" =>
         req.as[WheelTrade]
           .flatMap(T.insertTrade)
           .flatMap(Ok(_))
 
-
+      /**
+       * Subscribes to ticker updates for a given symbol.
+       *
+       * @param ticker The stock ticker symbol.
+       * @return Unit
+       */
       case GET -> Root / "subscribe" / ticker => 
         R.subscribeToTicker(ticker.toUpperCase()).flatMap(Ok(_))
 
+      /**
+       * Handles WebSocket connections for receiving real-time updates.
+       *
+       * @return The WebSocket connection.
+       */
       case GET -> Root / "receive"  => 
         val tickerSubs = Ref.of[F, Set[String]](Set.empty)
 
@@ -80,6 +115,12 @@ object TradetrackerRoutes {
           socket <- WebSocketBuilder[F].build(finalToClientStream, fromClient)
         } yield socket
       
+      /**
+       * Tries to authenticate the request using the provided authorization token.
+       *
+       * @param req The HTTP request containing the authorization token.
+       * @return The result of the authentication attempt.
+       */
       case req @ GET -> Root / "try-auth" =>
         val authToken = req.headers.get(Authorization).toRight("Couldn't find the auth header")
         println(authToken)
