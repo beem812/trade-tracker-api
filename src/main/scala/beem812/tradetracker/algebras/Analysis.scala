@@ -57,33 +57,18 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
    * @return The RSI value.
    */
   def getRSI(prices: List[Price]): F[Double] = Sync[F].delay{
-    val runUp = prices.drop(14).take(14)
-    val (prevGains, prevLosses) = gainsAndLosses(runUp)
-    // val last14 = prices.take(14)
-    val List(stuff1, stuff2) = prices.drop(13).take(2)
-    val firstaverage = if(stuff1.close - stuff2.close >= 0){
-      ((prevGains + stuff1.close - stuff2.close) / 14, prevLosses / 14)
-    } else {
+    val gainsAndLosses = prices.sliding(2).collect {
+      case List(prev, curr) =>
+        val change = curr.close - prev.close
+        if (change > 0) (change, 0.0) else (0.0, -change)
+    }.toList
 
-      (prevGains / 14,(prevLosses + stuff2.close - stuff1.close ) / 14)
-    }
-    val last13Pairs = prices.take(13).map(_.close).reverse.sliding(2,1).toList 
-    val (averageUp, averageDown) = last13Pairs.foldLeft(firstaverage){
-      case ((prevUp, prevDown), List(prevClose, currClose)) => {
-        val gainLoss = currClose - prevClose
-        if(gainLoss >= 0){
-          ((prevUp * 13 + gainLoss) / 14, prevDown * 13 / 14)
-        } else {
-          ((prevUp * 13) / 14, ((prevDown * 13) - gainLoss)/ 14)
-        }
-      }
-      case ((prevUp, prevDown), _) => (prevUp, prevDown)
-    }
-    
-    // val (gains, losses) = gainsAndLosses(last14) 
-    val relativeStrength = averageUp / averageDown
+    val (gains, losses) = gainsAndLosses.unzip
+    val avgGain = gains.sum / gains.size
+    val avgLoss = losses.sum / losses.size
 
-    100 - (100 / (1 + relativeStrength))
+    val rs = avgGain / avgLoss
+    100 - (100 / (1 + rs))
   }
 
   /**
@@ -93,13 +78,18 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
    * @return The Wilder's RSI value.
    */
   def getWildersRSI(prices: List[Price]): F[Double] = Sync[F].delay{
-    val previousSum = prices.drop(14).take(14).foldLeft(0.0)(_ + _.close)
-    val previousAverage = previousSum / 14
-    val (_, wsma) = prices.take(14).reverse.foldLeft((previousSum, previousAverage)){
-      case ((prevSum, prevAv), price) =>  (prevSum - prevAv + price.close, (prevSum - prevAv + price.close) / 14)
-    }
+    val gainsAndLosses = prices.sliding(2).collect {
+      case List(prev, curr) =>
+        val change = curr.close - prev.close
+        if (change > 0) (change, 0.0) else (0.0, -change)
+    }.toList
 
-    100 - (100/ (1 + wsma))
+    val (gains, losses) = gainsAndLosses.unzip
+    val avgGain = gains.sum / gains.size
+    val avgLoss = losses.sum / losses.size
+
+    val rs = avgGain / avgLoss
+    100 - (100 / (1 + rs))
   }
 
   def getThreeDayTrend(prices: List[Price]): F[Double] = Sync[F].delay{
@@ -111,12 +101,9 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
   def gainsAndLosses(prices: List[Price]): (Double, Double) = {
     val (gains, losses) = prices.map(_.close).sliding(2,1).toList.foldLeft((0.0, 0.0)){
       case ((gains, losses), List(first, second)) => if(first > second){ (gains + first - second, losses)} else {(gains, losses + second -  first)}
-
       case ((gains, losses), _) => (gains, losses)
-
       case (_, _) => (0.0, 0.0)
     }
-
     (gains, losses)
   }
 
@@ -135,6 +122,4 @@ final class LiveAnalysis[F[_]: Sync] extends Analysis[F] {
 
     CostBasisData(totalCredit, totalShares, Math.abs(totalCredit / totalShares))
   }
-
-
 }
